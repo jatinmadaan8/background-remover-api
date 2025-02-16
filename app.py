@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 # Ensure the uploads directory exists
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = '/tmp/uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
@@ -35,15 +35,18 @@ def remove_background():
     file.save(input_path)
 
     # Open the image and remove the background
-    input_image = Image.open(input_path)
-    output_image = remove(input_image)
+    with open(input_path, "rb") as f:
+        input_data = f.read()
+    output_data = remove(input_data)
 
     # Save the output image
     output_path = os.path.join(UPLOAD_FOLDER, f"output_{filename}")
-    output_image.save(output_path)
+    with open(output_path, "wb") as f:
+        f.write(output_data)
 
     # Return the processed image
     return send_file(output_path, mimetype='image/png')
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+# Vercel requires a handler function
+def handler(request):
+    return app.wsgi_app
